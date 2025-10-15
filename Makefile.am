@@ -17,7 +17,7 @@ mod_LTLIBRARIES = mod_rayo.la
 mod_rayo_la_SOURCES  =
 mod_rayo_la_CFLAGS   = $(AM_CFLAGS) $(FREESWITCH_CFLAGS) -I$(IKS_DIR)/include $(PCRE_CFLAGS)
 mod_rayo_la_LIBADD   = $(LIBS) $(IKS_LA) $(PCRE_LIBS) librayomod.la
-mod_rayo_la_LDFLAGS  = -avoid-version -module -no-undefined -shared -Wl,--whole-archive,librayomod.la,--no-whole-archive $(FREESWITCH_LIBS)
+mod_rayo_la_LDFLAGS  = -avoid-version -module -no-undefined -shared $(FREESWITCH_LIBS)
 
 BUILT_SOURCES=$(IKS_LA)
 
