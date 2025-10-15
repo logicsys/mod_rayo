@@ -31,7 +31,11 @@
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
 
-/* XMPP_ERROR symbols are now defined in mod_rayo_module.c */
+#undef XMPP_ERROR
+#define XMPP_ERROR(def_name, name, type) \
+	const struct xmpp_error def_name##_val = { name, type }; \
+	const struct xmpp_error *def_name = &def_name##_val;
+#include "xmpp_errors.def"
 
 /**
  * Create a <presence> event

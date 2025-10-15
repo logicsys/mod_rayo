@@ -246,7 +246,7 @@ sha_test (char *buf, int len)
 	t_reset ();
 
 	s = iks_sha_new ();
-	iks_sha_hash (s, buf, len, 1);
+	iks_sha_hash (s, (const unsigned char *)buf, len, 1);
 	iks_sha_print (s, out);
 	out[40] = '\0';
 	iks_sha_delete (s);
