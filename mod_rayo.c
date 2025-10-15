@@ -37,7 +37,7 @@
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_rayo_shutdown);
 SWITCH_MODULE_LOAD_FUNCTION(mod_rayo_load);
 SWITCH_MODULE_RUNTIME_FUNCTION(mod_rayo_runtime);
-SWITCH_MODULE_DEFINITION(mod_rayo, mod_rayo_load, mod_rayo_shutdown, mod_rayo_runtime);
+SWITCH_MODULE_DEFINITION(mod_rayo, mod_rayo_load, mod_rayo_shutdown, NULL);
 
 #define RAYO_CAUSE_HANGUP SWITCH_CAUSE_NORMAL_CLEARING
 #define RAYO_CAUSE_DECLINE SWITCH_CAUSE_CALL_REJECTED
