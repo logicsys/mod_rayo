@@ -34,7 +34,7 @@
 #undef XMPP_ERROR
 #define XMPP_ERROR(def_name, name, type) \
 	static const struct xmpp_error def_name##_val = { name, type }; \
-	const struct xmpp_error *def_name = &def_name##_val;
+	__attribute__((visibility("default"))) const struct xmpp_error *def_name = &def_name##_val;
 #include "xmpp_errors.def"
 
 /**
