@@ -5363,6 +5363,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_rayo_load)
 	switch_console_add_complete_func("::rayo::list_output", list_output);
 	switch_console_add_complete_func("::rayo::list_input", list_input);
 
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Module load completed successfully\n");
 	return SWITCH_STATUS_SUCCESS;
 
  error:
@@ -5390,8 +5391,11 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_rayo_shutdown)
  */
 SWITCH_MODULE_RUNTIME_FUNCTION(mod_rayo_runtime)
 {
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Runtime thread started, pause_when_offline=%d\n", globals.pause_when_offline);
 	if (globals.pause_when_offline) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Acquiring read lock on shutdown_rwlock\n");
 		switch_thread_rwlock_rdlock(globals.shutdown_rwlock);
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Read lock acquired, entering main loop\n");
 		while (!globals.shutdown) {
 			switch_sleep(1000 * 1000); /* 1 second */
 			pause_when_offline();
@@ -5399,6 +5403,7 @@ SWITCH_MODULE_RUNTIME_FUNCTION(mod_rayo_runtime)
 		switch_thread_rwlock_unlock(globals.shutdown_rwlock);
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Runtime thread is done\n");
 	}
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Runtime thread returning SWITCH_STATUS_TERM\n");
 	return SWITCH_STATUS_TERM;
 }
 
