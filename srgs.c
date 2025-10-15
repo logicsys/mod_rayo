@@ -28,9 +28,61 @@
  */
 #include <switch.h>
 #include <iksemel.h>
+
+#ifdef HAVE_PCRE2
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+/* PCRE2 compatibility defines */
+#define pcre pcre2_code
+#define pcre_free(re) pcre2_code_free(re)
+#define PCRE_PARTIAL PCRE2_PARTIAL_SOFT
+#define PCRE_ERROR_PARTIAL PCRE2_ERROR_PARTIAL
+#define PCRE_ERROR_NOSUBSTRING PCRE2_ERROR_NOSUBSTRING
+#else
 #include <pcre.h>
+#endif
 
 #include "srgs.h"
+
+#ifdef HAVE_PCRE2
+/* PCRE2 wrapper functions */
+static pcre2_match_data *match_data = NULL;
+
+static pcre2_code *pcre_compile_wrapper(const char *pattern, int options, const char **errptr, int *erroffset, const unsigned char *tableptr) {
+    int errorcode;
+    PCRE2_SIZE erroroffset;
+    pcre2_code *re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
+    if (erroffset) *erroffset = (int)erroroffset;
+    if (errptr) *errptr = re ? NULL : "PCRE2 compilation failed";
+    return re;
+}
+#define pcre_compile(pattern, options, errptr, erroffset, tableptr) \
+    pcre_compile_wrapper(pattern, options, errptr, erroffset, tableptr)
+static int pcre_exec_wrapper(const pcre2_code *code, const char *subject, int length, int startoffset, int options, int *ovector, int ovecsize) {
+    if (!match_data) {
+        match_data = pcre2_match_data_create_from_pattern(code, NULL);
+    }
+    int rc = pcre2_match(code, (PCRE2_SPTR)subject, length, startoffset, options, match_data, NULL);
+    if (rc >= 0) {
+        PCRE2_SIZE *ov = pcre2_get_ovector_pointer(match_data);
+        int i;
+        for (i = 0; i < rc * 2 && i < ovecsize; i++) {
+            ovector[i] = (int)ov[i];
+        }
+    }
+    return rc;
+}
+#define pcre_exec(code, extra, subject, length, startoffset, options, ovector, ovecsize) \
+    pcre_exec_wrapper(code, subject, length, startoffset, options, ovector, ovecsize)
+
+static int pcre_copy_named_substring_wrapper(const pcre2_code *code, const char *subject, int *ovector, int stringcount, const char *stringname, char *buffer, int buffersize) {
+    PCRE2_SIZE buflen = buffersize;
+    int rc = pcre2_substring_copy_byname(match_data, (PCRE2_SPTR)stringname, (PCRE2_UCHAR *)buffer, &buflen);
+    return rc;
+}
+#define pcre_copy_named_substring(code, subject, ovector, stringcount, stringname, buffer, buffersize) \
+    pcre_copy_named_substring_wrapper(code, subject, ovector, stringcount, stringname, buffer, buffersize)
+#endif
 
 #define MAX_RECURSION 100
 #define MAX_TAGS 1024
@@ -1659,6 +1711,12 @@ int srgs_init(void)
 void srgs_destroy(void)
 {
 	if (globals.init) {
+#ifdef HAVE_PCRE2
+		if (match_data) {
+			pcre2_match_data_free(match_data);
+			match_data = NULL;
+		}
+#endif
 		if (globals.tag_defs) {
 			switch_core_hash_destroy(&globals.tag_defs);
 			globals.tag_defs = NULL;

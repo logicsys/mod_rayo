@@ -45,7 +45,14 @@ SWITCH_VERSION_MAJOR=`echo $version|cut -d. -f1`
 SWITCH_VERSION_MINOR=`echo $version|cut -d. -f2`
 SWITCH_VERSION_MICRO=`echo $version|cut -d. -f3`
 
-PKG_CHECK_MODULES([PCRE], [libpcre >= 7.8])
+PKG_CHECK_MODULES([PCRE], [libpcre >= 7.8], [], [
+    AC_MSG_WARN([libpcre not found, trying libpcre2])
+    PKG_CHECK_MODULES([PCRE], [libpcre2-8 >= 10.0], [
+        AC_DEFINE([HAVE_PCRE2], [1], [Define to 1 if you have PCRE2])
+    ], [
+        AC_MSG_ERROR([Neither libpcre nor libpcre2 found. Install libpcre3-dev or libpcre2-dev])
+    ])
+])
 
 AC_SUBST(SWITCH_VERSION_MAJOR, [$SWITCH_VERSION_MAJOR])
 AC_SUBST(SWITCH_VERSION_MINOR, [$SWITCH_VERSION_MINOR])
